@@ -1295,12 +1295,12 @@ AlertDialog(
                         R.string.alarm_day_s2 to 5,
                         R.string.alarm_day_s3 to 6,
                     ).forEach { (stringRes, dayIndex) ->
-                        val on = days.value.contains(dayIndex)
+                        val on = days.contains(dayIndex)
                         FilterChip(
                             selected = on,
                             onClick = {
-                                if (on) days.value.remove(dayIndex) else days.value.add(dayIndex)
-                                days.value.sort()
+                                if (on) days.remove(dayIndex) else days.add(dayIndex)
+                                days.sort()
                             },
                             label = { Text(stringResource(stringRes)) },
                         )
@@ -1328,7 +1328,7 @@ AlertDialog(
                             id = editingAlarm?.id ?: onNewId("alarm"),
                             time = time,
                             label = label.trim(),
-                            days = days.value.toList(),
+                            days = days.toList(),
                             enabled = enabled,
                             sort = editingAlarm?.sort ?: 0,
                         )

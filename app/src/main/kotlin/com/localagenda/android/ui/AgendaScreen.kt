@@ -1253,7 +1253,7 @@ private fun CreateAlarmDialog(
 ) {
     var time by remember { mutableStateOf(editingAlarm?.time ?: "08:00") }
     var label by remember { mutableStateOf(editingAlarm?.label ?: "") }
-    var days by remember { mutableStateOf(editingAlarm?.days.toMutableList()) }
+    var days by remember { mutableStateOf(editingAlarm?.days?.toMutableList() ?: mutableListOf()) }
     var enabled by remember { mutableStateOf(editingAlarm?.enabled ?: true) }
     val isEditing = editingAlarm != null
 

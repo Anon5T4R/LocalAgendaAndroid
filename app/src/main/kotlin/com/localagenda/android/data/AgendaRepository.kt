@@ -2,6 +2,7 @@ package com.localagenda.android.data
 
 import android.content.ContentResolver
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import android.database.sqlite.SQLiteDatabase
 import kotlinx.coroutines.Dispatchers
@@ -257,7 +258,7 @@ class AgendaRepository(private val resolver: ContentResolver) {
         var db: SQLiteDatabase? = null
         try {
             db = SQLiteDatabase.openDatabase(
-                pfd.fileDescriptor,
+                pfd,
                 null,
                 SQLiteDatabase.OPEN_READWRITE,
             )
@@ -615,7 +616,7 @@ class AgendaRepository(private val resolver: ContentResolver) {
 
     /** mtime do documento (coluna padrão dos providers de documentos). */
     private fun queryLastModified(uri: Uri): Long? = runCatching {
-        resolver.query(uri, arrayOf(OpenableColumns.LAST_MODIFIED), null, null, null)?.use { c ->
+        resolver.query(uri, arrayOf(DocumentsContract.Document.COLUMN_LAST_MODIFIED), null, null, null)?.use { c ->
             if (c.moveToFirst()) c.getLong(0) else null
         }
     }.getOrNull()

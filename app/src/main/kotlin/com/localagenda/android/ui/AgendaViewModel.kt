@@ -145,10 +145,12 @@ class AgendaViewModel(application: Application) : AndroidViewModel(application) 
     /** ID novo no esquema do desktop (events "ev", tasks "task", alarmes…). */
     fun newId(prefix: String): String = repository.genId(prefix)
 
-    private fun mutate(block: () -> Unit) {
-        block()
-        syncRepoToState()
-        scheduleAutoSave()
+    private fun mutate(block: suspend () -> Unit) {
+        viewModelScope.launch {
+            block()
+            syncRepoToState()
+            scheduleAutoSave()
+        }
     }
 
     private fun syncRepoToState(

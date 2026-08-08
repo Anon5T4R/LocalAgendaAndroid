@@ -120,6 +120,10 @@ class AgendaRepository(private val resolver: ContentResolver) {
         ok
     }.getOrDefault(false)
 
+    /** Verifica se o arquivo no disco mudou externamente (outro dispositivo sincronizou). */
+    fun checkExternalChange(uri: Uri): Boolean =
+        withContext(Dispatchers.IO) { externalChangeDetected(uri) }
+
     /** Lê os bytes atuais do documento (export). */
     suspend fun readBytes(uri: Uri): ByteArray? =
         withContext(Dispatchers.IO) { readBytesInternal(uri) }

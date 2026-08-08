@@ -94,4 +94,20 @@
     <string name="empty_title">Nada aqui ainda</string>
     <string name="new_item_title">O que você quer adicionar?</string>
     <string name="event_all_day">dia inteiro</string>
+
+    <!-- Alarme -->
+    <string name="menu_new_alarm">Novo alarme</string>
+    <string name="alarm_new_title">Novo alarme</string>
+    <string name="alarm_edit_title">Editar alarme</string>
+    <string name="alarm_time_label">Hora</string>
+    <string name="alarm_label_label">Rótulo (opcional)</string>
+    <string name="alarm_days_label">Dias da semana</string>
+    <string name="alarm_enabled_label">Ativado</string>
+    <string name="alarm_day_d">D</string>
+    <string name="alarm_day_s">S</string>
+    <string name="alarm_day_t">T</string>
+    <string name="alarm_day_q">Q</string>
+    <string name="alarm_day_q2">Q</string>
+    <string name="alarm_day_s2">S</string>
+    <string name="alarm_day_s3">S</string>
 </resources>

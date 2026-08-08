@@ -1,4 +1,4 @@
-package com.localagenda.android.ui
+﻿package com.localagenda.android.ui
 
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -98,25 +98,25 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
- * Tela principal: dados carregados do .db em seções (calendários, eventos,
- * tarefas, alarmes), barra com Salvar/Travar/Configurações + menu Importar/
- * Exportar, resumo do dia no topo, FAB pra criar evento/tarefa e o diálogo de
- * conflito de sincronização.
+ * Tela principal: dados carregados do .db em seÃ§Ãµes (calendÃ¡rios, eventos,
+ * tarefas, alarmes), barra com Salvar/Travar/ConfiguraÃ§Ãµes + menu Importar/
+ * Exportar, resumo do dia no topo, FAB pra criar evento/tarefa e o diÃ¡logo de
+ * conflito de sincronizaÃ§Ã£o.
  *
- * Os editores completos (recorrência, lembretes, modal de evento etc.) são
- * trabalho futuro — aqui os diálogos de criação cobrem o essencial e exercem
- * o pipeline inteiro (mutação → auto-save debounced → persist no .db).
+ * Os editores completos (recorrÃªncia, lembretes, modal de evento etc.) sÃ£o
+ * trabalho futuro â€” aqui os diÃ¡logos de criaÃ§Ã£o cobrem o essencial e exercem
+ * o pipeline inteiro (mutaÃ§Ã£o â†’ auto-save debounced â†’ persist no .db).
  */
 
-/** Letras compactas dos dias da semana (0=domingo…6=sábado) pro alarme. */
+/** Letras compactas dos dias da semana (0=domingoâ€¦6=sÃ¡bado) pro alarme. */
 private val DAY_LETTERS = listOf("D", "S", "T", "Q", "Q", "S", "S")
 
 private val PT_BR = Locale("pt", "BR")
 
-/** "YYYY-MM-DDTHH:MM" — hora de parede local, formato do desktop. */
+/** "YYYY-MM-DDTHH:MM" â€” hora de parede local, formato do desktop. */
 private val WALL_CLOCK = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
 
-// ── Helpers de data/hora (mesmo formato de parede do desktop) ─────────────
+// â”€â”€ Helpers de data/hora (mesmo formato de parede do desktop) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 private fun parseDateTime(raw: String): LocalDateTime? {
     val withSeconds = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
@@ -129,7 +129,7 @@ private fun parseDateOnly(raw: String): LocalDate? =
     runCatching { LocalDate.parse(raw, DateTimeFormatter.ISO_LOCAL_DATE) }.getOrNull()
 
 private fun formatDue(due: String): String {
-    val full = DateTimeFormatter.ofPattern("EEE, d 'de' MMM · HH:mm", PT_BR)
+    val full = DateTimeFormatter.ofPattern("EEE, d 'de' MMM Â· HH:mm", PT_BR)
     val day = DateTimeFormatter.ofPattern("EEE, d 'de' MMM", PT_BR)
     if (due.contains('T')) {
         parseDateTime(due)?.let { return it.format(full) }
@@ -163,12 +163,13 @@ private fun greetingText(): String {
     }
 }
 
-/** Nome de exibição do arquivo (último segmento da URI de conteúdo). */
+/** Nome de exibiÃ§Ã£o do arquivo (Ãºltimo segmento da URI de conteÃºdo, sem query params). */
 private fun fileDisplayName(uri: String?): String? {
     if (uri == null) return null
     val last = Uri.parse(uri).lastPathSegment ?: return null
     val decoded = runCatching { Uri.decode(last) }.getOrNull() ?: last
-    val name = decoded.substringAfterLast('/')
+    // Remove query string (ex.: "?RefreshOption=...") se vier junto
+    val name = decoded.substringBefore('?').substringAfterLast('/')
     return name.takeIf { it.isNotBlank() }
 }
 
@@ -185,7 +186,7 @@ private fun parseCalendarColor(hex: String): Color =
     runCatching { Color(android.graphics.Color.parseColor(hex)) }
         .getOrDefault(MaterialTheme.colorScheme.primary)
 
-// ── Tela principal ─────────────────────────────────────────────────────────
+// â”€â”€ Tela principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -201,6 +202,7 @@ fun AgendaScreen(
     onDeleteTask: (String) -> Unit,
     onDeleteCalendar: (String) -> Unit,
     onDeleteAlarm: (String) -> Unit,
+    onSaveAlarm: (Alarm) -> Unit,
     onSaveSettings: (Settings) -> Unit,
     onToggleBiometric: (Boolean) -> Unit,
     onNewId: (String) -> String,
@@ -218,7 +220,11 @@ fun AgendaScreen(
     var showOverflow by remember { mutableStateOf(false) }
     var showEventDialog by rememberSaveable { mutableStateOf(false) }
     var showTaskDialog by rememberSaveable { mutableStateOf(false) }
+    var showAlarmDialog by rememberSaveable { mutableStateOf(false) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
+    var editingEvent by rememberSaveable { mutableStateOf<AgendaEvent?>(null) }
+    var editingTask by rememberSaveable { mutableStateOf<Task?>(null) }
+    var editingAlarm by rememberSaveable { mutableStateOf<Alarm?>(null) }
 
     LaunchedEffect(state.notice) {
         if (state.notice != null) {
@@ -384,15 +390,26 @@ fun AgendaScreen(
                         ),
                         busy = busy,
                         onDelete = { onDeleteEvent(ev.id) },
+                        onClick = { editingEvent = ev; showEventDialog = true },
                     )
                 }
                 item { SectionHeader(stringResource(R.string.sec_tasks, state.tasks.size), state.tasks.size) }
                 items(state.tasks, key = { "task-${it.id}" }) { task ->
-                    TaskRow(task = task, busy = busy, onDelete = { onDeleteTask(task.id) })
+                    TaskRow(
+                        task = task,
+                        busy = busy,
+                        onDelete = { onDeleteTask(task.id) },
+                        onClick = { editingTask = task; showTaskDialog = true },
+                    )
                 }
                 item { SectionHeader(stringResource(R.string.sec_alarms, state.alarms.size), state.alarms.size) }
                 items(state.alarms, key = { "alarm-${it.id}" }) { alarm ->
-                    AlarmRow(alarm = alarm, busy = busy, onDelete = { onDeleteAlarm(alarm.id) })
+                    AlarmRow(
+                        alarm = alarm,
+                        busy = busy,
+                        onDelete = { onDeleteAlarm(alarm.id) },
+                        onClick = { editingAlarm = alarm; showAlarmDialog = true },
+                    )
                 }
             }
         }
@@ -473,6 +490,35 @@ fun AgendaScreen(
                         )
                     }
                 }
+                Spacer(Modifier.height(12.dp))
+                Card(
+                    onClick = {
+                        showNewSheet = false
+                        showAlarmDialog = true
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    ),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.Filled.Alarm,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        )
+                        Spacer(Modifier.width(16.dp))
+                        Text(
+                            text = stringResource(R.string.menu_new_alarm),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        )
+                    }
+                }
             }
         }
     }
@@ -483,11 +529,50 @@ fun AgendaScreen(
             defaultDurationMin = state.settings.defaultDurationMin,
             busy = busy,
             onNewId = onNewId,
+            editingEvent = editingEvent,
             onSave = { event ->
                 onSaveEvent(event)
+                editingEvent = null
                 showEventDialog = false
             },
-            onDismiss = { showEventDialog = false },
+            onDismiss = {
+                editingEvent = null
+                showEventDialog = false
+            },
+        )
+    }
+
+    if (showTaskDialog) {
+        CreateTaskDialog(
+            busy = busy,
+            onNewId = onNewId,
+            editingTask = editingTask,
+            onSave = { task ->
+                onSaveTask(task)
+                editingTask = null
+                showTaskDialog = false
+            },
+            onDismiss = {
+                editingTask = null
+                showTaskDialog = false
+            },
+        )
+    }
+
+    if (showAlarmDialog) {
+        CreateAlarmDialog(
+            busy = busy,
+            onNewId = onNewId,
+            editingAlarm = editingAlarm,
+            onSave = { alarm ->
+                onSaveAlarm(alarm)
+                editingAlarm = null
+                showAlarmDialog = false
+            },
+            onDismiss = {
+                editingAlarm = null
+                showAlarmDialog = false
+            },
         )
     }
 
@@ -532,9 +617,9 @@ fun AgendaScreen(
     }
 }
 
-// ── Componentes de conteúdo ────────────────────────────────────────────────
+// â”€â”€ Componentes de conteÃºdo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-/** Cartão de boas-vindas: saudação + data + resumo do dia. */
+/** CartÃ£o de boas-vindas: saudaÃ§Ã£o + data + resumo do dia. */
 @Composable
 private fun DayHero(eventsToday: Int, openTasks: Int) {
     Surface(
@@ -584,7 +669,7 @@ private fun HeroStat(text: String) {
     }
 }
 
-/** Banner de erro com botão de fechar (some sozinho após 6 s). */
+/** Banner de erro com botÃ£o de fechar (some sozinho apÃ³s 6 s). */
 @Composable
 private fun ErrorBanner(message: String, onDismiss: () -> Unit) {
     Surface(
@@ -620,7 +705,7 @@ private fun ErrorBanner(message: String, onDismiss: () -> Unit) {
     }
 }
 
-/** Estado vazio: ícone + título + dica. */
+/** Estado vazio: Ã­cone + tÃ­tulo + dica. */
 @Composable
 private fun EmptyState() {
     Column(
@@ -718,8 +803,19 @@ private fun CalendarRow(cal: Calendar, busy: Boolean, onDelete: () -> Unit) {
 }
 
 @Composable
-private fun EventRow(ev: AgendaEvent, accent: Color, busy: Boolean, onDelete: () -> Unit) {
-    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+private fun EventRow(
+    ev: AgendaEvent,
+    accent: Color,
+    busy: Boolean,
+    onDelete: () -> Unit,
+    onClick: () -> Unit,
+) {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+    ) {
         Row(
             modifier = Modifier.padding(end = 8.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -778,24 +874,33 @@ private fun EventRow(ev: AgendaEvent, accent: Color, busy: Boolean, onDelete: ()
 
 @Composable
 private fun formatEventRange(start: String, end: String, allDay: Boolean): String {
-    val full = DateTimeFormatter.ofPattern("EEE, d 'de' MMM · HH:mm", PT_BR)
+    val full = DateTimeFormatter.ofPattern("EEE, d 'de' MMM Â· HH:mm", PT_BR)
     val day = DateTimeFormatter.ofPattern("EEE, d 'de' MMM", PT_BR)
     val timeOnly = DateTimeFormatter.ofPattern("HH:mm", PT_BR)
     if (allDay) {
         val s = parseDateOnly(start)
         return if (s != null) {
-            "${s.format(day)} · ${stringResource(R.string.event_all_day)}"
+            "${s.format(day)} Â· ${stringResource(R.string.event_all_day)}"
         } else start
     }
     val s = parseDateTime(start) ?: return start
     val e = parseDateTime(end)
-    return if (e != null) "${s.format(full)} – ${e.format(timeOnly)}" else s.format(full)
+    return if (e != null) "${s.format(full)} â€“ ${e.format(timeOnly)}" else s.format(full)
 }
 
 @Composable
-private fun TaskRow(task: Task, busy: Boolean, onDelete: () -> Unit) {
+private fun TaskRow(
+    task: Task,
+    busy: Boolean,
+    onDelete: () -> Unit,
+    onClick: () -> Unit,
+) {
     val done = task.doneAt != null
-    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+    ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -868,7 +973,7 @@ private fun TaskRow(task: Task, busy: Boolean, onDelete: () -> Unit) {
                             val overdue = isOverdue(task.due)
                             Text(
                                 text = if (overdue) {
-                                    "${formatDue(task.due)} · ${stringResource(R.string.task_overdue)}"
+                                    "${formatDue(task.due)} Â· ${stringResource(R.string.task_overdue)}"
                                 } else formatDue(task.due),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (overdue) MaterialTheme.colorScheme.error
@@ -890,9 +995,18 @@ private fun TaskRow(task: Task, busy: Boolean, onDelete: () -> Unit) {
 }
 
 @Composable
-private fun AlarmRow(alarm: Alarm, busy: Boolean, onDelete: () -> Unit) {
+private fun AlarmRow(
+    alarm: Alarm,
+    busy: Boolean,
+    onDelete: () -> Unit,
+    onClick: () -> Unit,
+) {
     val allDays = alarm.days.isEmpty()
-    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+    ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -971,22 +1085,24 @@ private fun AlarmRow(alarm: Alarm, busy: Boolean, onDelete: () -> Unit) {
     }
 }
 
-/** Diálogo mínimo de evento novo: título + calendário (o resto é editor futuro). */
+/** DiÃ¡logo de evento (novo ou ediÃ§Ã£o): tÃ­tulo + calendÃ¡rio. */
 @Composable
 private fun CreateEventDialog(
     calendars: List<Calendar>,
     defaultDurationMin: Int,
     busy: Boolean,
     onNewId: (String) -> String,
+    editingEvent: AgendaEvent?,
     onSave: (AgendaEvent) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var title by remember { mutableStateOf("") }
-    var selectedCal by remember { mutableStateOf(calendars.firstOrNull()?.id) }
+    var title by remember { mutableStateOf(editingEvent?.title ?? "") }
+    var selectedCal by remember { mutableStateOf(editingEvent?.calendarId ?? calendars.firstOrNull()?.id) }
+    val isEditing = editingEvent != null
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.event_new_title)) },
+        title = { Text(stringResource(if (isEditing) R.string.event_new_title else R.string.event_new_title)) },
         text = {
             Column {
                 OutlinedTextField(
@@ -1019,14 +1135,25 @@ private fun CreateEventDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    val start = AgendaViewModel.nowWallClock()
+                    val start = editingEvent?.start ?: AgendaViewModel.nowWallClock()
+                    val end = editingEvent?.end ?: AgendaViewModel.shiftWallClock(start, defaultDurationMin)
                     onSave(
                         AgendaEvent(
-                            id = onNewId("ev"),
+                            id = editingEvent?.id ?: onNewId("ev"),
                             calendarId = selectedCal ?: calendars.first().id,
                             title = title.trim(),
                             start = start,
-                            end = AgendaViewModel.shiftWallClock(start, defaultDurationMin),
+                            end = end,
+                            allDay = editingEvent?.allDay ?: false,
+                            description = editingEvent?.description ?? "",
+                            location = editingEvent?.location ?? "",
+                            rrule = editingEvent?.rrule ?: "",
+                            exdates = editingEvent?.exdates ?: emptyList(),
+                            seriesId = editingEvent?.seriesId ?: "",
+                            recurrenceId = editingEvent?.recurrenceId ?: "",
+                            reminders = editingEvent?.reminders ?: emptyList(),
+                            createdAt = editingEvent?.createdAt ?: 0,
+                            updatedAt = System.currentTimeMillis(),
                         )
                     )
                 },
@@ -1043,20 +1170,22 @@ private fun CreateEventDialog(
     )
 }
 
-/** Diálogo mínimo de tarefa nova: título + prioridade. */
+/** DiÃ¡logo de tarefa (nova ou ediÃ§Ã£o): tÃ­tulo + prioridade. */
 @Composable
 private fun CreateTaskDialog(
     busy: Boolean,
     onNewId: (String) -> String,
+    editingTask: Task?,
     onSave: (Task) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var title by remember { mutableStateOf("") }
-    var priority by remember { mutableStateOf(0) }
+    var title by remember { mutableStateOf(editingTask?.title ?? "") }
+    var priority by remember { mutableStateOf(editingTask?.priority ?: 0) }
+    val isEditing = editingTask != null
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.task_new_title)) },
+        title = { Text(stringResource(if (isEditing) R.string.task_new_title else R.string.task_new_title)) },
         text = {
             Column {
                 OutlinedTextField(
@@ -1094,13 +1223,127 @@ private fun CreateTaskDialog(
                 onClick = {
                     onSave(
                         Task(
-                            id = onNewId("task"),
+                            id = editingTask?.id ?: onNewId("task"),
                             title = title.trim(),
+                            notes = editingTask?.notes ?? "",
+                            due = editingTask?.due ?: "",
                             priority = priority,
+                            rrule = editingTask?.rrule ?: "",
+                            reminders = editingTask?.reminders ?: emptyList(),
+                            parentId = editingTask?.parentId ?: "",
+                            doneAt = editingTask?.doneAt,
+                            sort = editingTask?.sort ?: 0,
+                            createdAt = editingTask?.createdAt ?: 0,
+                            updatedAt = System.currentTimeMillis(),
                         )
                     )
                 },
                 enabled = title.isNotBlank() && !busy,
+            ) {
+                Text(stringResource(R.string.editor_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.editor_cancel))
+            }
+        },
+    )
+}
+
+/** Diálogo de alarme (novo ou edição): hora, rótulo, dias, ativado. */
+@Composable
+private fun CreateAlarmDialog(
+    busy: Boolean,
+    onNewId: (String) -> String,
+    editingAlarm: Alarm?,
+    onSave: (Alarm) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var time by remember { mutableStateOf(editingAlarm?.time ?: "08:00") }
+    var label by remember { mutableStateOf(editingAlarm?.label ?? "") }
+    var days by remember { mutableStateOf(editingAlarm?.days.toMutableList()) }
+    var enabled by remember { mutableStateOf(editingAlarm?.enabled ?: true) }
+    val isEditing = editingAlarm != null
+
+AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(if (isEditing) R.string.alarm_edit_title else R.string.alarm_new_title)) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = time,
+                    onValueChange = { time = it },
+                    label = { Text(stringResource(R.string.alarm_time_label)) },
+                    placeholder = { Text("HH:mm") },
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.ui.text.input.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth().width(200.dp),
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = label,
+                    onValueChange = { label = it },
+                    label = { Text(stringResource(R.string.alarm_label_label)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = stringResource(R.string.alarm_days_label),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(
+                        R.string.alarm_day_d to 0,
+                        R.string.alarm_day_s to 1,
+                        R.string.alarm_day_t to 2,
+                        R.string.alarm_day_q to 3,
+                        R.string.alarm_day_q2 to 4,
+                        R.string.alarm_day_s2 to 5,
+                        R.string.alarm_day_s3 to 6,
+                    ).forEach { (stringRes, dayIndex) ->
+                        val on = days.contains(dayIndex)
+                        FilterChip(
+                            selected = on,
+                            onClick = {
+                                if (on) days.remove(dayIndex) else days.add(dayIndex)
+                                days.sort()
+                            },
+                            label = { Text(stringResource(stringRes)) },
+                        )
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.alarm_enabled_label),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    androidx.compose.material3.Switch(
+                        checked = enabled,
+                        onCheckedChange = { enabled = it },
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onSave(
+                        Alarm(
+                            id = editingAlarm?.id ?: onNewId("alarm"),
+                            time = time,
+                            label = label.trim(),
+                            days = days.toList(),
+                            enabled = enabled,
+                            sort = editingAlarm?.sort ?: 0,
+                        )
+                    )
+                },
+                enabled = time.isNotBlank() && !busy,
             ) {
                 Text(stringResource(R.string.editor_save))
             }
@@ -1121,6 +1364,7 @@ private fun CreateTaskDialog(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+private fun SettingsDialog(
 private fun SettingsDialog(
     settings: Settings,
     biometricEnabled: Boolean,
@@ -1185,3 +1429,6 @@ private fun SettingsDialog(
         },
     )
 }
+
+
+

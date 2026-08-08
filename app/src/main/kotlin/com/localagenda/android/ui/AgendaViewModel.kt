@@ -236,6 +236,29 @@ class AgendaViewModel(application: Application) : AndroidViewModel(application) 
         _state.update { it.copy(externalChange = false) }
     }
 
+    /**
+     * Sincroniza ao retomar o app: verifica se o arquivo no disco mudou
+     * externamente (outro dispositivo sincronizou). Se mudou e não há edições
+     * pendentes (dirty=false), recarrega automaticamente. Se há edições,
+     * marca externalChange para o diálogo decidir.
+     */
+    fun syncOnResume() {
+        val uri = _state.value.agendaUri ?: return
+        if (_state.value.busy || _state.value.loading) return
+        viewModelScope.launch(Dispatchers.IO) {
+            val changed = repository.checkExternalChange(Uri.parse(uri))
+            if (changed) {
+                if (_state.value.dirty) {
+                    _state.update { it.copy(externalChange = true) }
+                } else {
+                    // Sem edições pendentes: recarrega silenciosamente
+                    repository.reload(Uri.parse(uri))
+                    _state.update { it.copy(notice = str(R.string.msg_reloaded)) }
+                }
+            }
+        }
+    }
+
     /** Grava com a checagem de mudança externa; conflito vira o diálogo. */
     private suspend fun persistSafely(notice: String?) {
         val uri = _state.value.agendaUri ?: return

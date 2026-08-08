@@ -96,6 +96,7 @@ fun LocalAgendaApp(
             onDeleteTask = viewModel::deleteTask,
             onDeleteCalendar = viewModel::deleteCalendar,
             onDeleteAlarm = viewModel::deleteAlarm,
+            onSaveAlarm = viewModel::saveAlarm,
             onSaveSettings = viewModel::saveSettings,
             onToggleBiometric = viewModel::toggleBiometric,
             onNewId = viewModel::newId,

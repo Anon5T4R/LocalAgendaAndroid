@@ -2,7 +2,9 @@
 
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -81,7 +83,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -100,22 +101,22 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
- * Tela principal: dados carregados do .db em seÃ§Ãµes (calendÃ¡rios, eventos,
- * tarefas, alarmes), barra com Salvar/Travar/ConfiguraÃ§Ãµes + menu Importar/
- * Exportar, resumo do dia no topo, FAB pra criar evento/tarefa e o diÃ¡logo de
- * conflito de sincronizaÃ§Ã£o.
+ * Tela principal: dados carregados do .db em seções (calendários, eventos,
+ * tarefas, alarmes), barra com Salvar/Travar/Configurações + menu Importar/
+ * Exportar, resumo do dia no topo, FAB pra criar evento/tarefa e o diálogo de
+ * conflito de sincronização.
  *
- * Os editores completos (recorrÃªncia, lembretes, modal de evento etc.) sÃ£o
- * trabalho futuro â€” aqui os diÃ¡logos de criaÃ§Ã£o cobrem o essencial e exercem
- * o pipeline inteiro (mutaÃ§Ã£o â†’ auto-save debounced â†’ persist no .db).
+ * Os editores completos (recorrência, lembretes, modal de evento etc.) são
+ * trabalho futuro — aqui os diálogos de criação cobrem o essencial e exercem
+ * o pipeline inteiro (mutação → auto-save debounced → persist no .db).
  */
 
-/** Letras compactas dos dias da semana (0=domingoâ€¦6=sÃ¡bado) pro alarme. */
+/** Letras compactas dos dias da semana (0=domingo…6=sábado) pro alarme. */
 private val DAY_LETTERS = listOf("D", "S", "T", "Q", "Q", "S", "S")
 
 private val PT_BR = Locale("pt", "BR")
 
-/** "YYYY-MM-DDTHH:MM" â€” hora de parede local, formato do desktop. */
+/** "YYYY-MM-DDTHH:MM" — hora de parede local, formato do desktop. */
 private val WALL_CLOCK = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
 
 // â”€â”€ Helpers de data/hora (mesmo formato de parede do desktop) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -165,7 +166,7 @@ private fun greetingText(): String {
     }
 }
 
-/** Nome de exibiÃ§Ã£o do arquivo (Ãºltimo segmento da URI de conteÃºdo, sem query params). */
+/** Nome de exibição do arquivo (último segmento da URI de conteúdo, sem query params). */
 private fun fileDisplayName(uri: String?): String? {
     if (uri == null) return null
     val last = Uri.parse(uri).lastPathSegment ?: return null
@@ -578,19 +579,7 @@ fun AgendaScreen(
         )
     }
 
-    if (showTaskDialog) {
-        CreateTaskDialog(
-            busy = busy,
-            onNewId = onNewId,
-            onSave = { task ->
-                onSaveTask(task)
-                showTaskDialog = false
-            },
-            onDismiss = { showTaskDialog = false },
-        )
-    }
-
-    if (showSettings) {
+if (showSettings) {
         SettingsDialog(
             settings = state.settings,
             biometricEnabled = state.biometricEnabled,
@@ -619,9 +608,9 @@ fun AgendaScreen(
     }
 }
 
-// â”€â”€ Componentes de conteÃºdo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Componentes de conteúdo ────────────────────────────────────────────────
 
-/** CartÃ£o de boas-vindas: saudaÃ§Ã£o + data + resumo do dia. */
+/** Cartão de boas-vindas: saudação + data + resumo do dia. */
 @Composable
 private fun DayHero(eventsToday: Int, openTasks: Int) {
     Surface(
@@ -671,7 +660,7 @@ private fun HeroStat(text: String) {
     }
 }
 
-/** Banner de erro com botÃ£o de fechar (some sozinho apÃ³s 6 s). */
+/** Banner de erro com botão de fechar (some sozinho após 6 s). */
 @Composable
 private fun ErrorBanner(message: String, onDismiss: () -> Unit) {
     Surface(
@@ -707,7 +696,7 @@ private fun ErrorBanner(message: String, onDismiss: () -> Unit) {
     }
 }
 
-/** Estado vazio: Ã­cone + tÃ­tulo + dica. */
+/** Estado vazio: ícone + título + dica. */
 @Composable
 private fun EmptyState() {
     Column(
@@ -887,7 +876,7 @@ private fun formatEventRange(start: String, end: String, allDay: Boolean): Strin
     }
     val s = parseDateTime(start) ?: return start
     val e = parseDateTime(end)
-    return if (e != null) "${s.format(full)} â€“ ${e.format(timeOnly)}" else s.format(full)
+    return if (e != null) "${s.format(full)} – ${e.format(timeOnly)}" else s.format(full)
 }
 
 @Composable
@@ -1087,7 +1076,7 @@ private fun AlarmRow(
     }
 }
 
-/** DiÃ¡logo de evento (novo ou ediÃ§Ã£o): tÃ­tulo + calendÃ¡rio. */
+/** Diálogo de evento (novo ou edição): título + calendário. */
 @Composable
 private fun CreateEventDialog(
     calendars: List<Calendar>,
@@ -1098,8 +1087,8 @@ private fun CreateEventDialog(
     onSave: (AgendaEvent) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var title by remember { mutableStateOf(editingEvent?.title ?? "") }
-    var selectedCal by remember { mutableStateOf(editingEvent?.calendarId ?? calendars.firstOrNull()?.id) }
+    var title by remember { mutableStateOf(editingEvent?.title ?: "") }
+    var selectedCal by remember { mutableStateOf(editingEvent?.calendarId ?: calendars.firstOrNull()?.id) }
     val isEditing = editingEvent != null
 
     AlertDialog(
@@ -1147,8 +1136,8 @@ private fun CreateEventDialog(
                             start = start,
                             end = end,
                             allDay = editingEvent?.allDay ?: false,
-                            description = editingEvent?.description ?? "",
-                            location = editingEvent?.location ?? "",
+                            description = editingEvent?.description ?: "",
+                            location = editingEvent?.location ?: "",
                             rrule = editingEvent?.rrule ?: "",
                             exdates = editingEvent?.exdates ?: emptyList(),
                             seriesId = editingEvent?.seriesId ?: "",
@@ -1172,7 +1161,7 @@ private fun CreateEventDialog(
     )
 }
 
-/** DiÃ¡logo de tarefa (nova ou ediÃ§Ã£o): tÃ­tulo + prioridade. */
+/** Diálogo de tarefa (nova ou edição): título + prioridade. */
 @Composable
 private fun CreateTaskDialog(
     busy: Boolean,
@@ -1181,7 +1170,7 @@ private fun CreateTaskDialog(
     onSave: (Task) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var title by remember { mutableStateOf(editingTask?.title ?? "") }
+    var title by remember { mutableStateOf(editingTask?.title ?: "") }
     var priority by remember { mutableStateOf(editingTask?.priority ?: 0) }
     val isEditing = editingTask != null
 
@@ -1227,7 +1216,7 @@ private fun CreateTaskDialog(
                         Task(
                             id = editingTask?.id ?: onNewId("task"),
                             title = title.trim(),
-                            notes = editingTask?.notes ?? "",
+                            notes = editingTask?.notes ?: "",
                             due = editingTask?.due ?: "",
                             priority = priority,
                             rrule = editingTask?.rrule ?: "",
@@ -1263,7 +1252,7 @@ private fun CreateAlarmDialog(
     onDismiss: () -> Unit,
 ) {
     var time by remember { mutableStateOf(editingAlarm?.time ?: "08:00") }
-    var label by remember { mutableStateOf(editingAlarm?.label ?? "") }
+    var label by remember { mutableStateOf(editingAlarm?.label ?: "") }
     var days by remember { mutableStateOf(editingAlarm?.days.toMutableList()) }
     var enabled by remember { mutableStateOf(editingAlarm?.enabled ?: true) }
     val isEditing = editingAlarm != null

@@ -1356,7 +1356,6 @@ AlertDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SettingsDialog(
-private fun SettingsDialog(
     settings: Settings,
     biometricEnabled: Boolean,
     onSaveSettings: (Settings) -> Unit,

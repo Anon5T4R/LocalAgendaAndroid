@@ -80,4 +80,18 @@
     <string name="err_file_not_found">arquivo não encontrado</string>
     <string name="err_no_file">agenda não está associada a um arquivo</string>
     <string name="err_write_failed">não foi possível gravar o banco</string>
+
+    <!-- Resumo do dia / herói -->
+    <string name="greeting_morning">Bom dia</string>
+    <string name="greeting_afternoon">Boa tarde</string>
+    <string name="greeting_evening">Boa noite</string>
+    <string name="hero_events_today">%1$d evento(s) hoje</string>
+    <string name="hero_tasks_open">%1$d tarefa(s) aberta(s)</string>
+    <string name="topbar_subtitle">%1$s</string>
+    <string name="saving_changes">Salvando alterações…</string>
+    <string name="alarm_off">Desligado</string>
+    <string name="task_overdue">atrasada</string>
+    <string name="empty_title">Nada aqui ainda</string>
+    <string name="new_item_title">O que você quer adicionar?</string>
+    <string name="event_all_day">dia inteiro</string>
 </resources>

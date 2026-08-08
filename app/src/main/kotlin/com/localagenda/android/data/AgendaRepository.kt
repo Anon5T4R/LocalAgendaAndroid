@@ -7,7 +7,10 @@ import android.provider.OpenableColumns
 import android.database.sqlite.SQLiteDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -208,19 +211,43 @@ class AgendaRepository(private val resolver: ContentResolver) {
     // ── Leitura completa ─────────────────────────────────────────────────
 
     private fun readAll(uri: Uri) {
-        withDb(uri) { db ->
-            ensureSchema(db)
-            calendars = queryCalendars(db)
-            events = queryEvents(db)
-            tasks = queryTasks(db)
-            alarms = queryAlarms(db)
-            settings = querySettings(db)
-            if (calendars.isEmpty()) {
-                // Base nova: semeia o calendário padrão (igual ao db.rs).
-                val cal = Calendar(id = genId("cal"), name = "Pessoal", color = "#2563eb")
-                insertCalendar(db, cal)
-                calendars = listOf(cal)
+        // Primeiro tenta ler sem criar o calendário padrão
+        val tempFile = File.createTempFile("agenda_", ".db")
+        try {
+            resolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(tempFile).use { output ->
+                    input.copyTo(output)
+                }
             }
+            var db: SQLiteDatabase? = null
+            try {
+                db = SQLiteDatabase.openDatabase(
+                    tempFile.absolutePath,
+                    null,
+                    SQLiteDatabase.OPEN_READWRITE,
+                )
+                db.rawQuery("PRAGMA journal_mode = DELETE", null).use { }
+                db.rawQuery("PRAGMA foreign_keys = ON", null).use { }
+                ensureSchema(db)
+                calendars = queryCalendars(db)
+                events = queryEvents(db)
+                tasks = queryTasks(db)
+                alarms = queryAlarms(db)
+                settings = querySettings(db)
+            } finally {
+                db?.close()
+            }
+        } finally {
+            tempFile.delete()
+        }
+        // Se não há calendários, semeia via writeAll (que copia de volta pro SAF)
+        if (calendars.isEmpty()) {
+            val cal = Calendar(id = genId("cal"), name = "Pessoal", color = "#2563eb")
+            calendars = listOf(cal)
+            dirty = true
+            // writeAll vai copiar pro SAF
+            writeAll(uri, force = true)
+            return
         }
         lastKnownBytes = readBytesInternal(uri)
         lastKnownModified = queryLastModified(uri)
@@ -231,45 +258,76 @@ class AgendaRepository(private val resolver: ContentResolver) {
 
     private fun writeAll(uri: Uri, force: Boolean) {
         if (!force && externalChangeDetected(uri)) throw ExternalChangeException()
-        withDb(uri) { db ->
-            writeAllData(db)
-            // Auto-checkpoint: com journal_mode=DELETE é no-op, mas garante que
-            // o arquivo único sai íntegro e sem sidecar de WAL.
-            runCatching { db.rawQuery("PRAGMA wal_checkpoint(TRUNCATE)", null).use { } }
+        val tempFile = File.createTempFile("agenda_", ".db")
+        try {
+            // Copia SAF -> temp (para preservar o conteúdo atual se for update)
+            resolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(tempFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            var db: SQLiteDatabase? = null
+            try {
+                db = SQLiteDatabase.openDatabase(
+                    tempFile.absolutePath,
+                    null,
+                    SQLiteDatabase.OPEN_READWRITE,
+                )
+                db.rawQuery("PRAGMA journal_mode = DELETE", null).use { }
+                db.rawQuery("PRAGMA foreign_keys = ON", null).use { }
+                writeAllData(db)
+                runCatching { db.rawQuery("PRAGMA wal_checkpoint(TRUNCATE)", null).use { } }
+            } finally {
+                db?.close()
+            }
+            // Copia temp -> SAF (sobrescreve o documento)
+            resolver.openOutputStream(uri)?.use { output ->
+                tempFile.inputStream().use { input ->
+                    input.copyTo(output)
+                }
+            }
+            // Sanidade pós-gravação
+            val bytes = readBytesInternal(uri)
+                ?: throw IOException("não foi possível reler o arquivo gravado")
+            if (!isSqliteHeader(bytes)) throw IOException("arquivo gravado não é um SQLite válido")
+            lastKnownBytes = bytes
+            lastKnownModified = queryLastModified(uri)
+            dirty = false
+        } finally {
+            tempFile.delete()
         }
-        // Sanidade pós-gravação (equivalente ao writtenIsSane do LocalKeys):
-        // relê e confere que o provider não truncou/embaralhou nada.
-        val bytes = readBytesInternal(uri)
-            ?: throw IOException("não foi possível reler o arquivo gravado")
-        if (!isSqliteHeader(bytes)) throw IOException("arquivo gravado não é um SQLite válido")
-        lastKnownBytes = bytes
-        lastKnownModified = queryLastModified(uri)
-        dirty = false
     }
 
     /**
-     * Abre o documento SAF num fd novo e executa `block` com a conexão.
-     * A conexão SEMPRE fecha no finally (o SQLiteDatabase assume o fd; o
-     * close do ParcelFileDescriptor depois é idempotente).
+     * Copia o documento SAF para um arquivo temporário, abre o SQLite nele,
+     * executa `block` e copia de volta se houver escrita (o caller controla
+     * via `persist`). Isso evita problemas de WAL/sidecars e incompatibilidade
+     * de API do openDatabase(ParcelFileDescriptor).
      */
     private inline fun <T> withDb(uri: Uri, block: (SQLiteDatabase) -> T): T {
-        val pfd = resolver.openFileDescriptor(uri, "rw")
-            ?: throw IOException("arquivo não encontrado")
-        var db: SQLiteDatabase? = null
+        val tempFile = File.createTempFile("agenda_", ".db")
         try {
-            db = SQLiteDatabase.openDatabase(
-                pfd,
-                null,
-                SQLiteDatabase.OPEN_READWRITE,
-            )
-            // DELETE (nunca WAL): o WAL precisa de sidecars -wal/-shm que o SAF
-            // não deixa criar ao lado do documento — o arquivo único basta.
-            db.rawQuery("PRAGMA journal_mode = DELETE", null).use { }
-            db.rawQuery("PRAGMA foreign_keys = ON", null).use { }
-            return block(db)
+            // Copia SAF -> temp
+            resolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(tempFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            var db: SQLiteDatabase? = null
+            try {
+                db = SQLiteDatabase.openDatabase(
+                    tempFile.absolutePath,
+                    null,
+                    SQLiteDatabase.OPEN_READWRITE,
+                )
+                db.rawQuery("PRAGMA journal_mode = DELETE", null).use { }
+                db.rawQuery("PRAGMA foreign_keys = ON", null).use { }
+                return block(db)
+            } finally {
+                db?.close()
+            }
         } finally {
-            db?.close()
-            pfd.close()
+            tempFile.delete()
         }
     }
 

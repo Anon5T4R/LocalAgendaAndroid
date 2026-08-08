@@ -246,22 +246,14 @@ fun AgendaScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        fileDisplayName(state.agendaUri)?.let { name ->
-                            Text(
-                                text = stringResource(R.string.topbar_subtitle, name),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
+                    val name = fileDisplayName(state.agendaUri)
+                    Text(
+                        text = name ?: stringResource(R.string.app_name),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 },
                 actions = {
                     IconButton(onClick = onSave, enabled = !busy) {
@@ -403,6 +395,13 @@ fun AgendaScreen(
                         busy = busy,
                         onDelete = { onDeleteTask(task.id) },
                         onClick = { editingTask = task; showTaskDialog = true },
+                        onToggleDone = {
+                            onSaveTask(
+                                task.copy(
+                                    doneAt = if (task.doneAt == null) System.currentTimeMillis() else null
+                                )
+                            )
+                        },
                     )
                 }
                 item { SectionHeader(stringResource(R.string.sec_alarms, state.alarms.size), state.alarms.size) }
@@ -885,6 +884,7 @@ private fun TaskRow(
     busy: Boolean,
     onDelete: () -> Unit,
     onClick: () -> Unit,
+    onToggleDone: () -> Unit,
 ) {
     val done = task.doneAt != null
     ElevatedCard(
@@ -896,19 +896,27 @@ private fun TaskRow(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (done) {
-                Icon(
-                    Icons.Filled.CheckCircle,
-                    contentDescription = null,
-                    tint = Color(0xFF2E7D32),
-                )
-            } else {
-                Icon(
-                    Icons.Outlined.Circle,
-                    contentDescription = null,
-                    tint = if (task.priority > 0) priorityColor(task.priority)
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .clickable(onClick = onToggleDone, enabled = !busy),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (done) {
+                    Icon(
+                        Icons.Filled.CheckCircle,
+                        contentDescription = null,
+                        tint = Color(0xFF2E7D32),
+                    )
+                } else {
+                    Icon(
+                        Icons.Outlined.Circle,
+                        contentDescription = null,
+                        tint = if (task.priority > 0) priorityColor(task.priority)
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {

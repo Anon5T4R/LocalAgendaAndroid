@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Calendário branco — derivação do app-icon do LocalAgenda desktop.
+  Canvas: 108 × 108dp (adaptive icon spec). Safe zone radius: 33dp (54,54).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- corpo do calendário -->
+    <path
+        android:pathData="M33,40 L75,40 A6,6 0 0 1 81,46 L81,78 A6,6 0 0 1 75,84 L33,84 A6,6 0 0 1 27,78 L27,46 A6,6 0 0 1 33,40 Z"
+        android:fillColor="#FFFFFF" />
+    <!-- aba superior -->
+    <path
+        android:pathData="M39,33 L45,33 L45,43 L39,43 Z"
+        android:fillColor="#FFFFFF" />
+    <path
+        android:pathData="M63,33 L69,33 L69,43 L63,43 Z"
+        android:fillColor="#FFFFFF" />
+    <!-- furos de argola -->
+    <path
+        android:pathData="M38,30 A4,4 0 0 1 46,30 L46,40 L38,40 Z"
+        android:fillColor="#FFFFFF" />
+    <path
+        android:pathData="M62,30 A4,4 0 0 1 70,30 L70,40 L62,40 Z"
+        android:fillColor="#FFFFFF" />
+    <!-- linhas dos dias -->
+    <path
+        android:pathData="M33,52 L81,52"
+        android:strokeColor="#1D4ED8"
+        android:strokeWidth="3"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M33,61 L81,61"
+        android:strokeColor="#1D4ED8"
+        android:strokeWidth="3"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M33,70 L81,70"
+        android:strokeColor="#1D4ED8"
+        android:strokeWidth="3"
+        android:fillColor="#00000000" />
+    <!-- pontinhos dos dias -->
+    <path
+        android:pathData="M37,57 A2.5,2.5 0 1 0 42,57 A2.5,2.5 0 1 0 37,57"
+        android:fillColor="#1D4ED8" />
+    <path
+        android:pathData="M48,57 A2.5,2.5 0 1 0 53,57 A2.5,2.5 0 1 0 48,57"
+        android:fillColor="#1D4ED8" />
+    <path
+        android:pathData="M37,66 A2.5,2.5 0 1 0 42,66 A2.5,2.5 0 1 0 37,66"
+        android:fillColor="#1D4ED8" />
+    <path
+        android:pathData="M48,66 A2.5,2.5 0 1 0 53,66 A2.5,2.5 0 1 0 48,66"
+        android:fillColor="#1D4ED8" />
+    <path
+        android:pathData="M59,66 A2.5,2.5 0 1 0 64,66 A2.5,2.5 0 1 0 59,66"
+        android:fillColor="#1D4ED8" />
+    <path
+        android:pathData="M70,66 A2.5,2.5 0 1 0 75,66 A2.5,2.5 0 1 0 70,66"
+        android:fillColor="#1D4ED8" />
+</vector>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LocalAgenda</string>
+
+    <!-- Primeira execução / banco trancado -->
+    <string name="welcome_title">Bem-vindo ao LocalAgenda</string>
+    <string name="welcome_subtitle">Sua agenda vive num arquivo SQLite (.db) que você escolhe — na pasta sincronizada (OneDrive/Google Drive) ou local. O desktop e o Android usam o mesmo arquivo; as configurações sincronizam junto.</string>
+    <string name="welcome_open">Abrir banco existente</string>
+    <string name="welcome_create">Criar banco novo</string>
+    <string name="welcome_open_last">Abrir o último banco</string>
+    <string name="loading">Carregando agenda…</string>
+
+    <!-- Barra superior -->
+    <string name="screen_import">Importar</string>
+    <string name="screen_export">Exportar</string>
+    <string name="screen_save">Salvar</string>
+    <string name="screen_lock">Travar</string>
+    <string name="screen_settings">Configurações</string>
+    <string name="screen_add">Adicionar</string>
+    <string name="menu_new_event">Novo evento</string>
+    <string name="menu_new_task">Nova tarefa</string>
+    <string name="dirty_unsaved">alterações não salvas</string>
+
+    <!-- Seções -->
+    <string name="sec_calendars">Calendários (%1$d)</string>
+    <string name="sec_events">Eventos (%1$d)</string>
+    <string name="sec_tasks">Tarefas (%1$d)</string>
+    <string name="sec_alarms">Alarmes (%1$d)</string>
+    <string name="empty_state">Nada aqui ainda. Toque em + para criar um evento ou tarefa.</string>
+
+    <!-- Criar evento / tarefa -->
+    <string name="event_new_title">Novo evento</string>
+    <string name="task_new_title">Nova tarefa</string>
+    <string name="editor_title_label">Título</string>
+    <string name="editor_save">Salvar</string>
+    <string name="editor_cancel">Cancelar</string>
+    <string name="event_calendar_label">Calendário</string>
+    <string name="task_priority_label">Prioridade</string>
+    <string name="prio_none">—</string>
+    <string name="prio_low">Baixa</string>
+    <string name="prio_medium">Média</string>
+    <string name="prio_high">Alta</string>
+    <string name="delete">Excluir</string>
+    <string name="alarm_daily">Todo dia</string>
+    <string name="task_done">Finalizada</string>
+
+    <!-- Configurações -->
+    <string name="settings_title">Configurações</string>
+    <string name="settings_theme">Tema</string>
+    <string name="theme_system">Sistema</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Escuro</string>
+    <string name="biometric_label">Desbloqueio biométrico</string>
+    <string name="dialog_close">Fechar</string>
+    <string name="biometric_hint">Preferência local deste aparelho (o banco em si não tem senha nem cifra).</string>
+
+    <!-- Conflito de sincronização (arquivo mudou fora do app) -->
+    <string name="external_change_title">Arquivo modificado fora do app</string>
+    <string name="external_change_message">O banco no disco mudou desde que foi aberto — provavelmente outro dispositivo sincronizou uma versão nova (OneDrive/Google Drive). Recarregar descarta suas alterações não salvas e adota a versão do disco; sobrescrever grava a sua versão por cima da outra.</string>
+    <string name="external_change_reload">Recarregar</string>
+    <string name="external_change_overwrite">Sobrescrever</string>
+
+    <!-- Mensagens do ViewModel -->
+    <string name="msg_loaded">Agenda carregada.</string>
+    <string name="msg_reloaded">Agenda recarregada do disco.</string>
+    <string name="msg_saved">Agenda salva.</string>
+    <string name="msg_export_saved">Cópia do banco salva.</string>
+    <string name="msg_op_failed">%1$s: %2$s</string>
+    <string name="op_save">Falha ao salvar</string>
+    <string name="op_import">Falha ao importar</string>
+    <string name="op_export">Falha ao exportar</string>
+    <string name="msg_load_failed">Não foi possível ler o banco: %1$s</string>
+    <string name="msg_save_failed">Não foi possível salvar: %1$s</string>
+    <string name="msg_reload_failed">Falha ao recarregar: %1$s</string>
+    <string name="msg_export_save_failed">Falha ao salvar o export: %1$s</string>
+    <string name="msg_import_invalid">O arquivo não parece uma base do LocalAgenda.</string>
+    <string name="msg_import_generic">Falha ao importar: %1$s</string>
+
+    <!-- Erros internos de I/O do documento -->
+    <string name="err_file_not_found">arquivo não encontrado</string>
+    <string name="err_no_file">agenda não está associada a um arquivo</string>
+    <string name="err_write_failed">não foi possível gravar o banco</string>
+</resources>

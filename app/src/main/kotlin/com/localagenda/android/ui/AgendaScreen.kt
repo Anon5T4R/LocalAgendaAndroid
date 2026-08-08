@@ -1253,7 +1253,7 @@ private fun CreateAlarmDialog(
 ) {
     var time by remember { mutableStateOf(editingAlarm?.time ?: "08:00") }
     var label by remember { mutableStateOf(editingAlarm?.label ?: "") }
-    var days by remember { mutableStateOf(editingAlarm?.days?.toMutableList() ?: mutableListOf()) }
+    var days by remember { mutableStateOf(editingAlarm?.days?.toMutableList() ?: mutableListOf<Int>()) }
     var enabled by remember { mutableStateOf(editingAlarm?.enabled ?: true) }
     val isEditing = editingAlarm != null
 
@@ -1295,12 +1295,12 @@ AlertDialog(
                         R.string.alarm_day_s2 to 5,
                         R.string.alarm_day_s3 to 6,
                     ).forEach { (stringRes, dayIndex) ->
-                        val on = days.contains(dayIndex)
+                        val on = days.value.contains(dayIndex)
                         FilterChip(
                             selected = on,
                             onClick = {
-                                if (on) days.remove(dayIndex) else days.add(dayIndex)
-                                days.sort()
+                                if (on) days.value.remove(dayIndex) else days.value.add(dayIndex)
+                                days.value.sort()
                             },
                             label = { Text(stringResource(stringRes)) },
                         )
@@ -1328,7 +1328,7 @@ AlertDialog(
                             id = editingAlarm?.id ?: onNewId("alarm"),
                             time = time,
                             label = label.trim(),
-                            days = days.toList(),
+                            days = days.value.toList(),
                             enabled = enabled,
                             sort = editingAlarm?.sort ?: 0,
                         )

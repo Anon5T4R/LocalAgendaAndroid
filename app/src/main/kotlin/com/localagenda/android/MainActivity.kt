@@ -10,7 +10,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.ui.Modifier
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import com.localagenda.android.ui.AgendaViewModel
@@ -77,7 +79,13 @@ class MainActivity : FragmentActivity() {
             notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
         setContent {
-            LocalAgendaTheme {
+            val state by viewModel.state.collectAsState()
+            val darkTheme = when (state.settings.theme) {
+                "light" -> false
+                "dark" -> true
+                else -> isSystemInDarkTheme()
+            }
+            LocalAgendaTheme(darkTheme = darkTheme) {
                 LocalAgendaApp(
                     viewModel = viewModel,
                     onPickDocument = {

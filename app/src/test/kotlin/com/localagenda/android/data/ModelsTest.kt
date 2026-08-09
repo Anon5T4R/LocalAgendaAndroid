@@ -68,7 +68,11 @@ class SettingsTest {
             }
         """.trimIndent()
 
-        val merged = Settings().copy(theme = "dark").toBlob(existing)
+        // Uso real: o app carrega o blob primeiro (fromBlob), o usuário edita
+        // e o toBlob grava por cima — modelDir/nGpuLayers vêm do load, não do
+        // default, então o desktop não é zerado.
+        val loaded = Settings.fromBlob(existing)
+        val merged = loaded.copy(theme = "dark").toBlob(existing)
         val json = org.json.JSONObject(merged)
 
         // O que o Android mexeu veio junto:

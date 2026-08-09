@@ -19,7 +19,15 @@
     <string name="screen_add">Adicionar</string>
     <string name="menu_new_event">Novo evento</string>
     <string name="menu_new_task">Nova tarefa</string>
-    <string name="dirty_unsaved">alterações não salvas</string>
+
+    <!-- Notificações -->
+    <string name="channel_alarms">Alarmes</string>
+    <string name="channel_alarms_desc">Toque dos alarmes do LocalAgenda</string>
+    <string name="channel_reminders">Lembretes</string>
+    <string name="channel_reminders_desc">Lembretes de eventos e tarefas</string>
+    <string name="notif_alarm_title">Alarme</string>
+    <string name="notif_alarm_text">Alarme às %1$s</string>
+    <string name="notif_reminder_text">Lembrete: %1$s</string>
 
     <!-- Seções -->
     <string name="sec_calendars">Calendários (%1$d)</string>
@@ -30,7 +38,9 @@
 
     <!-- Criar evento / tarefa -->
     <string name="event_new_title">Novo evento</string>
+    <string name="event_edit_title">Editar evento</string>
     <string name="task_new_title">Nova tarefa</string>
+    <string name="task_edit_title">Editar tarefa</string>
     <string name="editor_title_label">Título</string>
     <string name="editor_save">Salvar</string>
     <string name="editor_cancel">Cancelar</string>
@@ -41,7 +51,6 @@
     <string name="prio_medium">Média</string>
     <string name="prio_high">Alta</string>
     <string name="delete">Excluir</string>
-    <string name="alarm_daily">Todo dia</string>
     <string name="task_done">Finalizada</string>
 
     <!-- Configurações -->
@@ -70,9 +79,7 @@
     <string name="op_import">Falha ao importar</string>
     <string name="op_export">Falha ao exportar</string>
     <string name="msg_load_failed">Não foi possível ler o banco: %1$s</string>
-    <string name="msg_save_failed">Não foi possível salvar: %1$s</string>
     <string name="msg_reload_failed">Falha ao recarregar: %1$s</string>
-    <string name="msg_export_save_failed">Falha ao salvar o export: %1$s</string>
     <string name="msg_import_invalid">O arquivo não parece uma base do LocalAgenda.</string>
     <string name="msg_import_generic">Falha ao importar: %1$s</string>
 
@@ -87,7 +94,6 @@
     <string name="greeting_evening">Boa noite</string>
     <string name="hero_events_today">%1$d evento(s) hoje</string>
     <string name="hero_tasks_open">%1$d tarefa(s) aberta(s)</string>
-    <string name="topbar_subtitle">%1$s</string>
     <string name="saving_changes">Salvando alterações…</string>
     <string name="alarm_off">Desligado</string>
     <string name="task_overdue">atrasada</string>

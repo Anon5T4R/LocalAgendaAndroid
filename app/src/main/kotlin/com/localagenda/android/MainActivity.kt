@@ -1,7 +1,9 @@
 package com.localagenda.android
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import com.localagenda.android.ui.AgendaViewModel
 import com.localagenda.android.ui.theme.LocalAgendaTheme
@@ -19,6 +22,10 @@ import com.localagenda.android.ui.theme.LocalAgendaTheme
 class MainActivity : FragmentActivity() {
 
     private val viewModel: AgendaViewModel by viewModels()
+
+    /** API 33+: notificações de alarme/lembrete precisam de permissão em runtime. */
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     /** Abrir um .db existente (ACTION_OPEN_DOCUMENT). */
     private val openDbLauncher: ActivityResultLauncher<Array<String>> =
@@ -66,6 +73,12 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
         setContent {
             LocalAgendaTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->

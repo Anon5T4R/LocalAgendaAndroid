@@ -1,4 +1,4 @@
-﻿package com.localagenda.android.ui
+package com.localagenda.android.ui
 
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -119,7 +119,7 @@ private val PT_BR = Locale("pt", "BR")
 /** "YYYY-MM-DDTHH:MM" — hora de parede local, formato do desktop. */
 private val WALL_CLOCK = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
 
-// â”€â”€ Helpers de data/hora (mesmo formato de parede do desktop) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Helpers de data/hora (mesmo formato de parede do desktop) ─────────────
 
 private fun parseDateTime(raw: String): LocalDateTime? {
     val withSeconds = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
@@ -132,7 +132,7 @@ private fun parseDateOnly(raw: String): LocalDate? =
     runCatching { LocalDate.parse(raw, DateTimeFormatter.ISO_LOCAL_DATE) }.getOrNull()
 
 private fun formatDue(due: String): String {
-    val full = DateTimeFormatter.ofPattern("EEE, d 'de' MMM Â· HH:mm", PT_BR)
+val full = DateTimeFormatter.ofPattern("EEE, d 'de' MMM · HH:mm", PT_BR)
     val day = DateTimeFormatter.ofPattern("EEE, d 'de' MMM", PT_BR)
     if (due.contains('T')) {
         parseDateTime(due)?.let { return it.format(full) }
@@ -189,7 +189,7 @@ private fun parseCalendarColor(hex: String): Color =
     runCatching { Color(android.graphics.Color.parseColor(hex)) }
         .getOrDefault(MaterialTheme.colorScheme.primary)
 
-// â”€â”€ Tela principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Tela principal ─────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -576,9 +576,9 @@ fun AgendaScreen(
                 showAlarmDialog = false
             },
         )
-    }
+}
 
-if (showSettings) {
+    if (showSettings) {
         SettingsDialog(
             settings = state.settings,
             biometricEnabled = state.biometricEnabled,
@@ -800,9 +800,8 @@ private fun EventRow(
     onDelete: () -> Unit,
     onClick: () -> Unit,
 ) {
-    ElevatedCard(
+ElevatedCard(
         modifier = Modifier
-            .fillMaxWidth()
             .fillMaxWidth()
             .clickable(onClick = onClick),
     ) {
@@ -864,13 +863,13 @@ private fun EventRow(
 
 @Composable
 private fun formatEventRange(start: String, end: String, allDay: Boolean): String {
-    val full = DateTimeFormatter.ofPattern("EEE, d 'de' MMM Â· HH:mm", PT_BR)
+val full = DateTimeFormatter.ofPattern("EEE, d 'de' MMM · HH:mm", PT_BR)
     val day = DateTimeFormatter.ofPattern("EEE, d 'de' MMM", PT_BR)
     val timeOnly = DateTimeFormatter.ofPattern("HH:mm", PT_BR)
     if (allDay) {
         val s = parseDateOnly(start)
         return if (s != null) {
-            "${s.format(day)} Â· ${stringResource(R.string.event_all_day)}"
+            "${s.format(day)} · ${stringResource(R.string.event_all_day)}"
         } else start
     }
     val s = parseDateTime(start) ?: return start
@@ -971,8 +970,8 @@ private fun TaskRow(
                             if (task.priority > 0) Spacer(Modifier.width(8.dp))
                             val overdue = isOverdue(task.due)
                             Text(
-                                text = if (overdue) {
-                                    "${formatDue(task.due)} Â· ${stringResource(R.string.task_overdue)}"
+text = if (overdue) {
+                                    "${formatDue(task.due)} · ${stringResource(R.string.task_overdue)}"
                                 } else formatDue(task.due),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (overdue) MaterialTheme.colorScheme.error
@@ -1101,7 +1100,7 @@ private fun CreateEventDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(if (isEditing) R.string.event_new_title else R.string.event_new_title)) },
+        title = { Text(stringResource(if (isEditing) R.string.event_edit_title else R.string.event_new_title)) },
         text = {
             Column {
                 OutlinedTextField(
@@ -1184,7 +1183,7 @@ private fun CreateTaskDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(if (isEditing) R.string.task_new_title else R.string.task_new_title)) },
+        title = { Text(stringResource(if (isEditing) R.string.task_edit_title else R.string.task_new_title)) },
         text = {
             Column {
                 OutlinedTextField(
@@ -1263,9 +1262,9 @@ private fun CreateAlarmDialog(
     var label by remember { mutableStateOf(editingAlarm?.label ?: "") }
     var days by remember { mutableStateOf(editingAlarm?.days?.toMutableList() ?: mutableListOf<Int>()) }
     var enabled by remember { mutableStateOf(editingAlarm?.enabled ?: true) }
-    val isEditing = editingAlarm != null
+val isEditing = editingAlarm != null
 
-AlertDialog(
+    AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(if (isEditing) R.string.alarm_edit_title else R.string.alarm_new_title)) },
         text = {
@@ -1321,7 +1320,7 @@ AlertDialog(
                         style = MaterialTheme.typography.bodyLarge,
                     )
                     Spacer(Modifier.width(8.dp))
-                    androidx.compose.material3.Switch(
+                    Switch(
                         checked = enabled,
                         onCheckedChange = { enabled = it },
                     )
@@ -1427,6 +1426,3 @@ private fun SettingsDialog(
         },
     )
 }
-
-
-

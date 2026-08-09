@@ -6,6 +6,8 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.localagenda.android.R
+import com.localagenda.android.alarm.AlarmScheduler
+import com.localagenda.android.alarm.ReminderScheduler
 import com.localagenda.android.data.AgendaEvent
 import com.localagenda.android.data.AgendaRepository
 import com.localagenda.android.data.Alarm
@@ -111,6 +113,7 @@ class AgendaViewModel(application: Application) : AndroidViewModel(application) 
             try {
                 repository.open(Uri.parse(uri))
                 syncRepoToState(loaded = true, loading = false, notice = str(R.string.msg_loaded))
+                syncNotifications()
             } catch (e: Exception) {
                 _state.update {
                     it.copy(
@@ -149,6 +152,7 @@ class AgendaViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             block()
             syncRepoToState()
+            syncNotifications()
             scheduleAutoSave()
         }
     }
@@ -173,6 +177,17 @@ class AgendaViewModel(application: Application) : AndroidViewModel(application) 
                 error = error,
             )
         }
+    }
+
+    /**
+     * Re-sincroniza alarmes e lembretes no AlarmManager a partir do modelo em
+     * memória. Chamado a cada mutação e na abertura/reload do banco — o
+     * AlarmManager não sabe o que mudou, quem reconcilia é este sync.
+     */
+    private fun syncNotifications() {
+        val app = getApplication<Application>()
+        AlarmScheduler(app).sync(repository.alarms)
+        ReminderScheduler(app).sync(repository.events, repository.tasks)
     }
 
     // ── Salvar (auto-save debounced 2 s + manual) ────────────────────────
@@ -222,6 +237,7 @@ class AgendaViewModel(application: Application) : AndroidViewModel(application) 
             try {
                 repository.reload(Uri.parse(uri))
                 syncRepoToState(notice = str(R.string.msg_reloaded))
+                syncNotifications()
                 _state.update { it.copy(busy = false) }
             } catch (e: Exception) {
                 _state.update {
@@ -253,6 +269,7 @@ class AgendaViewModel(application: Application) : AndroidViewModel(application) 
                 } else {
                     // Sem edições pendentes: recarrega silenciosamente
                     repository.reload(Uri.parse(uri))
+                    syncNotifications()
                     _state.update { it.copy(notice = str(R.string.msg_reloaded)) }
                 }
             }

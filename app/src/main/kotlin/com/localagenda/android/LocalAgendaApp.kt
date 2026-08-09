@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -54,13 +55,13 @@ fun LocalAgendaApp(
             onCreateDocument = onCreateDocument,
             onOpenLast = null,
             error = state.error,
-            modifier = modifier,
+            modifier = modifier.statusBarsPadding(),
         )
 
         !state.loaded -> {
             if (state.loading) {
                 Column(
-                    modifier = modifier.fillMaxSize(),
+                    modifier = modifier.statusBarsPadding().fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
@@ -79,7 +80,7 @@ fun LocalAgendaApp(
                     onCreateDocument = null,
                     onOpenLast = viewModel::loadLast,
                     error = state.error,
-                    modifier = modifier,
+                    modifier = modifier.statusBarsPadding(),
                 )
             }
         }

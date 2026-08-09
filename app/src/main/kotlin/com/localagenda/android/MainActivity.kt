@@ -10,9 +10,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
@@ -81,24 +78,21 @@ class MainActivity : FragmentActivity() {
         }
         setContent {
             LocalAgendaTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    LocalAgendaApp(
-                        viewModel = viewModel,
-                        onPickDocument = {
-                            openDbLauncher.launch(arrayOf("application/x-sqlite3", "application/octet-stream", "*/*"))
-                        },
-                        onCreateDocument = {
-                            createDbLauncher.launch("agenda.db")
-                        },
-                        onPickImport = {
-                            importLauncher.launch(arrayOf("application/x-sqlite3", "application/octet-stream", "*/*"))
-                        },
-                        onExport = {
-                            exportLauncher.launch("agenda-backup.db")
-                        },
-                        modifier = Modifier.padding(innerPadding),
-                    )
-                }
+                LocalAgendaApp(
+                    viewModel = viewModel,
+                    onPickDocument = {
+                        openDbLauncher.launch(arrayOf("application/x-sqlite3", "application/octet-stream", "*/*"))
+                    },
+                    onCreateDocument = {
+                        createDbLauncher.launch("agenda.db")
+                    },
+                    onPickImport = {
+                        importLauncher.launch(arrayOf("application/x-sqlite3", "application/octet-stream", "*/*"))
+                    },
+                    onExport = {
+                        exportLauncher.launch("agenda-backup.db")
+                    },
+                )
             }
         }
     }

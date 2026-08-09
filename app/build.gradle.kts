@@ -23,8 +23,8 @@ android {
         applicationId = "com.localagenda.android"
         minSdk = 28
         targetSdk = 34
-        versionCode = 10
-        versionName = "0.4.0"
+        versionCode = 11
+        versionName = "0.4.1"
 
         vectorDrawables { useSupportLibrary = true }
         // Smoke test no emulador (CI): abrir o app de verdade e ver a UI subir.

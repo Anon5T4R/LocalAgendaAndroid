@@ -4,7 +4,7 @@ name: CI
 # release.yml já cuida do build de release na tag.
 on:
   push:
-    branches: ["main"]
+    branches: ["master"]
   workflow_dispatch:
 
 jobs:
